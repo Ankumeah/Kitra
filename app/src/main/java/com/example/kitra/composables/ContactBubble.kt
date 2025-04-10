@@ -1,6 +1,7 @@
 package com.example.kitra.composables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,20 +18,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.kitra.ui.theme.LocalNavController
 import com.example.kitra.ui.theme.kitraColors
+import com.example.kitra.functions.shorten
 
 @Composable
 fun ContactBubble(modifier: Modifier = Modifier, contactName: String) {
-    fun shorten(text: String, maxLength: Int = 10): String {
-        return if (text.length > maxLength) {
-            text.take(maxLength) + "…"
-        } else {
-            text
-        }
-    }
+    val navController = LocalNavController.current
 
-
-    Row(modifier = modifier.clip(RoundedCornerShape(40.dp)).background(kitraColors().primary)) {
+    Row(modifier = modifier.clip(RoundedCornerShape(40.dp)).background(kitraColors().primary).clickable{navController.navigate(contactName)}) {
         Box(modifier = Modifier.width(100.dp).clip(RoundedCornerShape(40.dp)).fillMaxSize()) {
             Text("", color = Color.Red, fontSize = 100.sp, modifier = Modifier.fillMaxSize().padding(10.dp).background(color = Color.Red, shape = RoundedCornerShape(40.dp)))
         }
