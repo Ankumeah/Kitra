@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,6 +41,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
+
     val contacts = remember { mutableListOf("01234567890", "1", "2", "3", "4","5", "6", "7", "8", "9", "0", "some ahh number") }
     val chats = remember { mutableListOf(textMessage("u stupid", true), textMessage("u too", false), textMessage("ik", true)) }
     val navController = rememberNavController()
@@ -51,21 +55,5 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 composable(contact) { ChatScreen(modifier = modifier, contactName = contact, chats = chats) }
             }
         }
-    }
-}
-
-@Preview(name = "Light Mode", showBackground = true)
-@Composable
-fun LightModePreview() {
-    KitraTheme {
-        AppNavHost()
-    }
-}
-
-@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true)
-@Composable
-fun DarkModePreview() {
-    KitraTheme {
-        AppNavHost()
     }
 }
