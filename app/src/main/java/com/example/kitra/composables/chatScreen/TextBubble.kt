@@ -1,6 +1,8 @@
-package com.example.kitra.composables
+package com.example.kitra.composables.chatScreen
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,16 +16,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.kitra.ui.theme.KitraTheme
 import com.example.kitra.ui.theme.kitraColors
+import java.nio.file.WatchEvent
 
 @Composable
 fun TextBubble(modifier: Modifier = Modifier, text: String, isSentByMe: Boolean = true) {
-    Row(modifier = modifier.background(kitraColors().background)) {
+    Row(modifier = modifier.fillMaxWidth().background(kitraColors().background)) {
         if (isSentByMe) {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(0.1f))
         }
-        Text(text = text, color = kitraColors().text, modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(color = kitraColors().primary).padding(5.dp))
+        Row(modifier = Modifier.weight(0.9f), horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start) {
+            Text(
+                text = text,
+                color = kitraColors().text,
+                modifier = Modifier.clip(RoundedCornerShape(5.dp))
+                    .background(color = kitraColors().primary).padding(5.dp)
+            )
+        }
         if (!isSentByMe) {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(0.1f))
         }
     }
 }
@@ -36,7 +46,7 @@ fun LightModeTextBubblePreview() {
     }
 }
 
-@Preview(name = "Dark Mode", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Preview(name = "Dark Mode", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 fun DarkModeTextBubblePreview() {
     KitraTheme {
