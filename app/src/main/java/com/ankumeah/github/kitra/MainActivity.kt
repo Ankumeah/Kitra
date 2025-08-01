@@ -7,11 +7,17 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.ankumeah.github.kitra.screens.MainScreen
 import com.ankumeah.github.kitra.ui.theme.KitraTheme
+import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
+import com.ankumeah.github.kitra.screens.ChatScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,9 +26,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             KitraTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    MainActivity(
+                        modifier = Modifier
+                            .padding(innerPadding)
                     )
                 }
             }
@@ -31,17 +37,22 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun MainActivity(modifier: Modifier = Modifier) {
+    val navController = rememberNavController()
+    val contacts = remember { SampleDataViewModel().contactList }
+
+    NavHost(navController = navController, startDestination = "MainScreen") {
+        composable("MainScreen") { MainScreen(modifier = modifier.fillMaxSize(), navController = navController) }
+        for (contact in contacts) {
+            composable(contact.contactName) { ChatScreen(modifier = modifier.fillMaxSize(), navController = navController, contact = contact) }
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun MainActivityPreview() {
     KitraTheme {
-        Greeting("Android")
+        MainActivity(modifier = Modifier.fillMaxSize())
     }
 }
