@@ -1,5 +1,7 @@
 package com.ankumeah.github.kitra
 
-class Branding {
-    val appName: String = "Kitra"
+import androidx.lifecycle.ViewModel
+
+class Branding: ViewModel() {
+  val appName: String = "Kitra"
 }

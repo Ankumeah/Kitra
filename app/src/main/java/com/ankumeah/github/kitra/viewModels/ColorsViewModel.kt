@@ -1,29 +1,23 @@
 package com.ankumeah.github.kitra.viewModels
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 
-class ColorsViewModel {
-    private var isDark: Boolean = true
 
-    fun swapTheme() {
-        isDark = ! isDark
-    }
+class ColorsViewModel(isDarkMode: Boolean = true) {
+  private var isDark by mutableStateOf(isDarkMode)
 
-    private fun makeColor(darkColor: Color, lightColor: Color): Color {
-        return if (isDark == true) {
-            darkColor
-        } else {
-            lightColor
-        }
-    }
+  fun swapTheme(isDark: Boolean? = null) {
+    this.isDark = isDark ?: !this.isDark
+  }
 
-    fun primary(): Color {
-        return makeColor(darkColor = Color.Gray, lightColor = Color.White)
-    }
-    fun secondary(): Color {
-        return makeColor(darkColor = Color.DarkGray, lightColor = Color.LightGray)
-    }
-    fun text(): Color {
-        return makeColor(darkColor = Color.White, lightColor = Color.Black)
-    }
+  fun isDarkTheme(): Boolean = isDark
+
+  private fun makeColor(darkColor: Color, lightColor: Color, isDark: Boolean? = null): Color = if (this.isDark || isDark == true) darkColor else lightColor
+
+  fun primary(isDark: Boolean? = null): Color = makeColor(darkColor = Color.Gray, lightColor = Color.White, isDark = isDark)
+  fun secondary(isDark: Boolean? = null): Color = makeColor(darkColor = Color.DarkGray, lightColor = Color.LightGray, isDark = isDark)
+  fun text(isDark: Boolean? = null): Color = makeColor(darkColor = Color.White, lightColor = Color.Black, isDark = isDark)
 }
