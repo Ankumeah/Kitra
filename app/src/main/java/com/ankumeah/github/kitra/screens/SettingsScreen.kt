@@ -106,9 +106,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
           .padding(10.dp)
           .clip(RoundedCornerShape(15.dp))
           .background(colors.secondary())
-          .clickable {
-            navController.navigate("MainScreen")
-          },
+          .clickable { navController.navigate("MainScreen") },
         contentAlignment = Alignment.Center
       ) {
         Text(text = "<", color = colors.text(), fontSize = 20.sp)

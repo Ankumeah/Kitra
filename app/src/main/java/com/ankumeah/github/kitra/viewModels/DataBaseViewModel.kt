@@ -1,6 +1,5 @@
 package com.ankumeah.github.kitra.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ankumeah.github.kitra.classes.Kitra
@@ -91,6 +90,5 @@ class DataBaseViewModel: ViewModel() {
         copyToRealm(misc, updatePolicy = UpdatePolicy.ALL)
       }
     }
-    if (colors.isDarkTheme() == this.misc.value.firstOrNull()?.isDarkTheme) Log.i("DataBaseViewModel", "Color swap passed") else Log.w("DataBaseViewModel", "Color swap failed")
   }
 }

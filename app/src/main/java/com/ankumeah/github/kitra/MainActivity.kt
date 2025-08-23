@@ -43,8 +43,6 @@ class MainActivity : ComponentActivity() {
           val colors = dataBaseViewModel.colors
           val misc = dataBaseViewModel.misc.collectAsStateWithLifecycle()
 
-          if (misc.value.isEmpty()) dataBaseViewModel.updateMisc()
-
           val startScreen = if (Firebase.auth.currentUser != null)  "MainScreen" else "SignInPage"
 
           MainActivity(
