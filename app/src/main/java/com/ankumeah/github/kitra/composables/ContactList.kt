@@ -32,7 +32,7 @@ fun ContactBlock(modifier: Modifier = Modifier, contact: Contact, navController:
       .clip(shape = RoundedCornerShape(15.dp))
       .background(color = colors.secondary())
       .clickable {
-        navController.navigate("chats/${contact.contactName.replace(" ", "-")}")
+        navController.navigate("chats/${contact.contactName}")
       }
       .padding(horizontal = 20.dp, vertical = 10.dp),
     contentAlignment = Alignment.CenterStart

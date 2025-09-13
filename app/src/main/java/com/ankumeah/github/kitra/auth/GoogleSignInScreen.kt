@@ -6,12 +6,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ankumeah.github.kitra.BuildConfig
@@ -29,7 +32,12 @@ fun GoogleSignInScreen(context: Context, navController: NavController, modifier:
   val webClientId = BuildConfig.webClientId
   val dataBaseViewModel: DataBaseViewModel = viewModel()
 
-  Box(modifier = modifier.background(colors.primary())) { TitleBar(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.1f), colors = colors) }
+  Column(modifier = modifier.background(colors.primary())) {
+    TitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), colors = colors)
+    Box(modifier = Modifier.fillMaxWidth().weight(0.9f), contentAlignment = Alignment.Center) {
+      Text(text = "Waiting for Sign In", fontSize = 24.sp, color = colors.text())
+    }
+  }
 
   val googleSignInOptions = remember {
     GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,18 +41,19 @@ class MainActivity : ComponentActivity() {
       KitraTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
           val contacts = dataBaseViewModel.contacts.collectAsStateWithLifecycle()
-          val colors = dataBaseViewModel.colors
           val misc = dataBaseViewModel.misc.collectAsStateWithLifecycle()
+          val colors = remember(misc.value.firstOrNull()?.isDarkTheme) {
+            ColorsViewModel(misc.value.firstOrNull()?.isDarkTheme != false)
+          }
 
-          val startScreen = if (Firebase.auth.currentUser != null)  "MainScreen" else "SignInPage"
+          val startScreen = if (Firebase.auth.currentUser != null) "MainScreen" else "SignInPage"
 
           MainActivity(
             contacts = contacts.value,
             startScreen = startScreen,
             dataBaseViewModel = dataBaseViewModel,
             colors = colors,
-            modifier = Modifier
-              .padding(innerPadding)
+            modifier = Modifier.padding(innerPadding)
           )
         }
       }
@@ -65,13 +67,20 @@ fun MainActivity(modifier: Modifier = Modifier, contacts: List<Contact>, startSc
   val context = LocalContext.current
 
   NavHost(navController = navController, startDestination = startScreen) {
-    composable("MainScreen") { MainScreen(modifier = modifier.fillMaxSize(), navController = navController, contacts = contacts, colors = colors) }
+    composable("MainScreen") { MainScreen(modifier = modifier.fillMaxSize(), navController = navController, contacts = contacts, colors = colors, dataBaseViewModel = dataBaseViewModel) }
     composable("SettingsScreen") { SettingsScreen(modifier = modifier.fillMaxSize(), navController = navController, dataBaseViewModel = dataBaseViewModel, colors = colors) }
     composable("SignInPage") { SignInPage(modifier = modifier.fillMaxSize(), navController = navController, colors = colors) }
     composable("auth/GoogleSignIn") { GoogleSignInScreen(modifier = modifier.fillMaxSize(), context = context, navController = navController, colors = colors) }
-    for (contact in contacts) {
-      if (contact.contactName.isBlank()) { continue }
-      composable("chats/${contact.contactName.replace(oldValue = " ", newValue = "-")}") { ChatScreen(modifier = modifier.fillMaxSize(), navController = navController, contact = contact) }
+    composable("chats/{contact}") { backStackEntry ->
+      val contact = dataBaseViewModel.findContact(backStackEntry.arguments?.getString("contact").toString())
+      if (contact != null) {
+        ChatScreen(
+          modifier = modifier.fillMaxSize(),
+          navController = navController,
+          colors = colors,
+          contact = contact
+        )
+      }
     }
   }
 }

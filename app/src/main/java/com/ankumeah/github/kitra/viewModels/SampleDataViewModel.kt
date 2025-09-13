@@ -7,10 +7,22 @@ import com.ankumeah.github.kitra.models.User
 
 class SampleDataViewModel: ViewModel() {
   val contactList: List<Contact> = listOf(
-    Contact(),
-    Contact(),
-    Contact(),
-    Contact()
+    Contact().apply {
+      contactName = "Stuff"
+      contactAddress = "he@tho"
+    },
+    Contact().apply {
+      contactName = "Stuff"
+      contactAddress = "he@tho"
+    },
+    Contact().apply {
+      contactName = "Stuff"
+      contactAddress = "he@tho"
+    },
+    Contact().apply {
+      contactName = "Stuff"
+      contactAddress = "he@tho"
+    }
   )
   val text: String = "Smt Smt Text"
   val textLong: String = "Big sample text to be used at the time of dev"

@@ -19,7 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ankumeah.github.kitra.models.Contact
@@ -28,8 +27,7 @@ import com.ankumeah.github.kitra.viewModels.ColorsViewModel
 import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
 
 @Composable
-fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, contact: Contact) {
-  val colors: ColorsViewModel = viewModel()
+fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, contact: Contact, colors: ColorsViewModel) {
 
   println("HEY YOU IDIOT, YES IM TALKING TO YOU, LOOK HERE\ncontact name: ${contact.contactName}\ncontact route: ${contact.contactName.replace(" ", "-")}")
 
@@ -88,6 +86,6 @@ fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, cont
 @Composable
 fun ChatScreenPreview() {
   KitraTheme {
-    ChatScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contact = SampleDataViewModel().contactList[1])
+    ChatScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contact = SampleDataViewModel().contactList[1], colors = ColorsViewModel())
   }
 }

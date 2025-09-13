@@ -86,8 +86,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
                     .background(colors.primary())
                     .padding(horizontal = 5.dp)
                     .clickable {
-                      dataBaseViewModel.colors.swapTheme()
-                      dataBaseViewModel.updateMisc()
+                      colors.swapTheme()
+                      dataBaseViewModel.updateMisc(colors.isDarkTheme())
                     }
                 )
               }

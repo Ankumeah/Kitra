@@ -22,6 +22,7 @@ import com.ankumeah.github.kitra.composables.MainScreenTitleBar
 import com.ankumeah.github.kitra.models.Contact
 import com.ankumeah.github.kitra.ui.theme.KitraTheme
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
+import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
 import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
 
 @Composable
@@ -29,10 +30,11 @@ fun MainScreen(
   navController: NavController,
   modifier: Modifier = Modifier,
   contacts: List<Contact>,
-  colors: ColorsViewModel
+  colors: ColorsViewModel,
+  dataBaseViewModel: DataBaseViewModel
 ) {
   Column(modifier = modifier.background(colors.secondary())) {
-    MainScreenTitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), navController = navController, colors = colors)
+    MainScreenTitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), navController = navController, colors = colors, dataBaseViewModel = dataBaseViewModel)
 
     Column(
       modifier = Modifier
@@ -75,6 +77,6 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
   KitraTheme {
-    MainScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contacts = SampleDataViewModel().contactList, colors = ColorsViewModel())
+    MainScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contacts = SampleDataViewModel().contactList, colors = ColorsViewModel(), dataBaseViewModel = DataBaseViewModel())
   }
 }

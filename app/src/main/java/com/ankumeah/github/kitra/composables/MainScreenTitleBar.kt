@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,10 +28,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ankumeah.github.kitra.Branding
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
+import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
 
 @Composable
-fun MainScreenTitleBar(modifier: Modifier = Modifier, navController: NavController, colors: ColorsViewModel) {
+fun MainScreenTitleBar(modifier: Modifier = Modifier, navController: NavController, colors: ColorsViewModel, dataBaseViewModel: DataBaseViewModel) {
   val branding: Branding = viewModel()
+  val showAddNewContactPopUp = remember { mutableStateOf(false) }
 
   Row(modifier = modifier.background(color = colors.secondary())) {
     Box(
@@ -58,6 +63,7 @@ fun MainScreenTitleBar(modifier: Modifier = Modifier, navController: NavControll
           .padding(10.dp)
           .clip(RoundedCornerShape(15.dp))
           .background(color = colors.primary())
+          .clickable { showAddNewContactPopUp.value = true }
           .padding(5.dp)
           .clip(RoundedCornerShape(10.dp))
           .background(colors.secondary()),
@@ -92,11 +98,26 @@ fun MainScreenTitleBar(modifier: Modifier = Modifier, navController: NavControll
       }
     }
   }
+
+  if (showAddNewContactPopUp.value) {
+    AddNewContactPopUp(
+      colors = colors,
+      onDismissRequest = { showAddNewContactPopUp.value = false },
+      dataBaseViewModel = dataBaseViewModel
+    )
+  }
 }
 
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true)
 @Composable
 fun TitleBarPreview() {
-  MainScreenTitleBar(modifier = Modifier.fillMaxWidth(), navController = rememberNavController(), colors = ColorsViewModel())
+  Row(Modifier.fillMaxSize()) {
+    MainScreenTitleBar(
+      modifier = Modifier.fillMaxWidth().fillMaxSize(0.1f),
+      navController = rememberNavController(),
+      colors = ColorsViewModel(),
+      dataBaseViewModel = DataBaseViewModel()
+    )
+  }
 }

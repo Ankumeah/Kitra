@@ -6,8 +6,9 @@ import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import org.mongodb.kbson.ObjectId
 
-class Contact: RealmObject {
+class Contact() : RealmObject {
   @PrimaryKey var _id: ObjectId = ObjectId()
   var contactName: String = ""
+  var contactAddress: String = ""
   var messages: RealmList<Message> = realmListOf()
 }
