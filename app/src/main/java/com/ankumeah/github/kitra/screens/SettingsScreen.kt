@@ -1,6 +1,5 @@
 package com.ankumeah.github.kitra.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,10 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.ankumeah.github.kitra.auth.googleSignOut
 import com.ankumeah.github.kitra.classes.Setting
 import com.ankumeah.github.kitra.composables.SignOutPopup
 import com.ankumeah.github.kitra.composables.TitleBar
+import com.ankumeah.github.kitra.models.Misc
+import com.ankumeah.github.kitra.models.User
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
 import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
 
@@ -38,8 +38,8 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
   val showSignOutPopup = remember { mutableStateOf(false) }
   val context = LocalContext.current
 
-  val user = dataBaseViewModel.user.collectAsStateWithLifecycle().value.firstOrNull()
-  val misc = dataBaseViewModel.misc.collectAsStateWithLifecycle().value.firstOrNull()
+  val user: User? = dataBaseViewModel.user.collectAsStateWithLifecycle().value
+  val misc: Misc? = dataBaseViewModel.misc.collectAsStateWithLifecycle().value
 
   val settings = listOf(
     Setting("Username", user?.username),
@@ -48,8 +48,6 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
   )
 
   Column(modifier = modifier.background(colors.primary())) {
-    val isDark = dataBaseViewModel.misc.collectAsStateWithLifecycle().value.firstOrNull()?.isDarkTheme
-
     TitleBar(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.1f), colors = colors)
     Column(
       modifier = Modifier
@@ -133,16 +131,7 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
         onDismissRequest = { showSignOutPopup.value = false },
         onConform = {
           showSignOutPopup.value = false
-          googleSignOut(
-            context = context,
-            onComplete = {
-              Toast.makeText(context, "Signed Out", Toast.LENGTH_LONG).show()
-              dataBaseViewModel.removeUserEmail()
-            }
-          )
-          navController.navigate("SignInPage") {
-            popUpTo("SettingsScreen") { inclusive = true }
-          }
+          dataBaseViewModel.logOut(navController = navController)
         }
       )
     }

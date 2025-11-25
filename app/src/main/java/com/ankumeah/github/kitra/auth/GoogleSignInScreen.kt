@@ -1,9 +1,9 @@
 package com.ankumeah.github.kitra.auth
 
 import android.content.Context
+import android.util.Base64
+import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,26 +11,33 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ankumeah.github.kitra.BuildConfig
+import com.ankumeah.github.kitra.apiCalls.BackendRetrofitInstance
 import com.ankumeah.github.kitra.composables.TitleBar
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
 import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.Firebase
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
-fun GoogleSignInScreen(context: Context, navController: NavController, modifier: Modifier = Modifier, colors: ColorsViewModel) {
+fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifier, colors: ColorsViewModel) {
   val webClientId = BuildConfig.webClientId
   val dataBaseViewModel: DataBaseViewModel = viewModel()
+  val context: Context = LocalContext.current
 
   Column(modifier = modifier.background(colors.primary())) {
     TitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), colors = colors)
@@ -39,50 +46,66 @@ fun GoogleSignInScreen(context: Context, navController: NavController, modifier:
     }
   }
 
-  val googleSignInOptions = remember {
-    GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-      .requestIdToken(webClientId)
-      .requestEmail()
-      .build()
-  }
+  val request = GetCredentialRequest(
+    listOf(
+      GetGoogleIdOption.Builder()
+        .setServerClientId(webClientId)
+        .setFilterByAuthorizedAccounts(false)
+        .build()
+    )
+  )
 
-  val googleSignInClient = remember {
-    GoogleSignIn.getClient(context, googleSignInOptions)
-  }
+  LaunchedEffect(Unit) {
+    val credentialManager = CredentialManager.create(context)
+    val result = credentialManager.getCredential(context, request)
+    val google = result.credential as GoogleIdTokenCredential
+    val token = google.idToken
 
-  val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
-    val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-    try {
-      val account = task.result
-      val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-      Firebase.auth.signInWithCredential(credential)
-        .addOnCompleteListener {
-          if (task.isSuccessful) {
-            Toast.makeText(context, "SignIn Successful", Toast.LENGTH_SHORT).show()
-            navController.navigate("MainScreen") {
-              popUpTo("auth/GoogleSignIn") { inclusive = true }
+    val tokenParts: List<String> = token.split(".")
+    val body = String(Base64.decode(tokenParts[1], Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP))
+    val mapType = object : TypeToken<Map<String, String>>() {}.type
+
+    val info: Map<String, String> = Gson().fromJson(body, mapType)
+    val username = (info["given_name"] ?: "") + " " + (info["family_name"] ?: "")
+    val email = info["email"] ?: ""
+
+    if (username == " " || email == "") {
+      Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
+      navController.navigate("SignInPage") { popUpTo("auth/GoogleSignIn") { inclusive = true } }
+    }
+    else {
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          val res = BackendRetrofitInstance.loginApi.sendLoginInfo(mapOf("JWT_token" to token))
+
+          withContext(Dispatchers.Main) {
+            if (res.isSuccessful) {
+              Toast.makeText(context, "Logged in as $username", Toast.LENGTH_SHORT).show()
+              dataBaseViewModel.logIn(
+                user = username,
+                mail = email,
+                refreshToken = res.body()!!.refresh_token,
+                refreshTokenExpiry = res.body()!!.refresh_token_expire,
+                sessionToken = res.body()!!.session_token,
+                sessionTokenExpiry = res.body()!!.session_token_exire
+              )
+              navController.navigate(("MainScreen")) { popUpTo("auth/GoogleSignIn") { inclusive = true } }
             }
-            dataBaseViewModel.getUserEmail()
-          }
-          else {
-            Toast.makeText(context, "SignIn Failed", Toast.LENGTH_LONG).show()
-            navController.navigate("SignInPage") {
-              popUpTo("auth/GoogleSignIn") { inclusive = true }
+            else {
+              Toast.makeText(context, res.body()?.message.toString(), Toast.LENGTH_SHORT).show()
+              navController.navigate("SignInPage") { popUpTo("auth/GoogleSignIn") { inclusive = true } }
+              Log.i("GoogleSignInScreen", "res = ${res.code()}, ${res.message()}")
             }
           }
         }
-    }
-    catch(e: Exception) {
-      Toast.makeText(context, "Error, check logs for details", Toast.LENGTH_SHORT).show()
-      println("Error while signing in with google: ${e.message}")
-      navController.navigate("SignInPage") {
-        popUpTo("auth/GoogleSignIn") { inclusive = true }
+        catch (e: Exception) {
+          withContext(Dispatchers.Main) {
+            Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
+            navController.navigate("SignInPage") { popUpTo("auth/GoogleSignIn") { inclusive = true } }
+            Log.e("GoogleSignInScreen", "${e.cause}: ${e.message}")
+          }
+        }
       }
     }
-  }
-
-  LaunchedEffect(Unit) {
-    val signInIntent = googleSignInClient.signInIntent
-    launcher.launch(signInIntent)
   }
 }

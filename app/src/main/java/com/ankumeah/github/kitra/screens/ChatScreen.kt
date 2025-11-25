@@ -28,9 +28,6 @@ import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
 
 @Composable
 fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, contact: Contact, colors: ColorsViewModel) {
-
-  println("HEY YOU IDIOT, YES IM TALKING TO YOU, LOOK HERE\ncontact name: ${contact.contactName}\ncontact route: ${contact.contactName.replace(" ", "-")}")
-
   Column(modifier = modifier.background(colors.primary())) {
     Row(
       modifier = Modifier

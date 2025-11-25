@@ -3,6 +3,5 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
-    id("com.google.gms.google-services") version "4.4.3" apply false
-    id("io.realm.kotlin") version "2.3.0" apply false
+    id("io.realm.kotlin") version "3.0.0" apply false
 }

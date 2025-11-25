@@ -15,25 +15,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.ankumeah.github.kitra.composables.ContactList
 import com.ankumeah.github.kitra.composables.MainScreenTitleBar
-import com.ankumeah.github.kitra.models.Contact
 import com.ankumeah.github.kitra.ui.theme.KitraTheme
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
 import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
-import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
 
 @Composable
 fun MainScreen(
   navController: NavController,
   modifier: Modifier = Modifier,
-  contacts: List<Contact>,
   colors: ColorsViewModel,
   dataBaseViewModel: DataBaseViewModel
 ) {
   Column(modifier = modifier.background(colors.secondary())) {
+    val contacts = dataBaseViewModel.contacts.collectAsStateWithLifecycle()
     MainScreenTitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), navController = navController, colors = colors, dataBaseViewModel = dataBaseViewModel)
 
     Column(
@@ -44,7 +43,7 @@ fun MainScreen(
         .clip(RoundedCornerShape(15.dp))
         .background(colors.primary())
     ) {
-      if (contacts.isEmpty()) {
+      if (contacts.value.isEmpty()) {
         Box(modifier = Modifier.fillMaxWidth().weight(0.9f), contentAlignment = Alignment.Center) {
           Text(
             text = "You have no contacts\nClick on the '+' above\nto add some",
@@ -57,9 +56,10 @@ fun MainScreen(
       }
       else {
         ContactList(
-          contacts = contacts,
+          contacts = contacts.value,
           navController = navController,
           colors = colors,
+          dataBaseViewModel = dataBaseViewModel,
           modifier = Modifier
             .fillMaxWidth()
             .weight(0.9f),
@@ -77,6 +77,6 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
   KitraTheme {
-    MainScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contacts = SampleDataViewModel().contactList, colors = ColorsViewModel(), dataBaseViewModel = DataBaseViewModel())
+    MainScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), colors = ColorsViewModel(), dataBaseViewModel = DataBaseViewModel())
   }
 }

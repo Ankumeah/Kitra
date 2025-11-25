@@ -4,6 +4,8 @@ import android.app.Application
 import com.ankumeah.github.kitra.models.Contact
 import com.ankumeah.github.kitra.models.Message
 import com.ankumeah.github.kitra.models.Misc
+import com.ankumeah.github.kitra.models.RefreshToken
+import com.ankumeah.github.kitra.models.SessionToken
 import com.ankumeah.github.kitra.models.User
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
@@ -21,7 +23,9 @@ class Kitra: Application() {
           Contact::class,
           Message::class,
           User::class,
-          Misc::class
+          Misc::class,
+          RefreshToken::class,
+          SessionToken::class
         )
       )
     )
