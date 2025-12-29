@@ -42,7 +42,6 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController, 
   val misc: Misc? = dataBaseViewModel.misc.collectAsStateWithLifecycle().value
 
   val settings = listOf(
-    Setting("Username", user?.username),
     Setting("Email", user?.email),
     Setting("Dark mode", misc?.isDarkTheme)
   )

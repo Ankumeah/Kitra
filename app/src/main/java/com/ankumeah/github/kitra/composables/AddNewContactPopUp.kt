@@ -33,29 +33,29 @@ fun AddNewContactPopUp(modifier: Modifier = Modifier, dataBaseViewModel: DataBas
   val coroutineScope = rememberCoroutineScope()
 
   val outlinedTextFieldColors = TextFieldDefaults.colors(
-      focusedTextColor = colors.text(),
-      unfocusedTextColor = colors.text(),
-      disabledTextColor = colors.text().copy(alpha = 0.5f),
-      errorTextColor = colors.text(),
+    focusedTextColor = colors.text(),
+    unfocusedTextColor = colors.text(),
+    disabledTextColor = colors.text().copy(alpha = 0.5f),
+    errorTextColor = colors.text(),
 
-      cursorColor = colors.text(),
-      errorCursorColor = colors.text(),
+    cursorColor = colors.text(),
+    errorCursorColor = colors.text(),
 
-      focusedIndicatorColor = colors.text(),
-      unfocusedIndicatorColor = colors.text(),
-      disabledIndicatorColor = colors.text().copy(alpha = 0.5f),
-      errorIndicatorColor = colors.text(),
+    focusedIndicatorColor = colors.text(),
+    unfocusedIndicatorColor = colors.text(),
+    disabledIndicatorColor = colors.text().copy(alpha = 0.5f),
+    errorIndicatorColor = colors.text(),
 
-      focusedLabelColor = colors.text(),
-      unfocusedLabelColor = colors.text(),
-      disabledLabelColor = colors.text().copy(alpha = 0.5f),
-      errorLabelColor = colors.text(),
+    focusedLabelColor = colors.text(),
+    unfocusedLabelColor = colors.text(),
+    disabledLabelColor = colors.text().copy(alpha = 0.5f),
+    errorLabelColor = colors.text(),
 
-      focusedContainerColor = Color.Transparent,
-      unfocusedContainerColor = Color.Transparent,
-      disabledContainerColor = Color.Transparent,
-      errorContainerColor = Color.Transparent,
-    )
+    focusedContainerColor = Color.Transparent,
+    unfocusedContainerColor = Color.Transparent,
+    disabledContainerColor = Color.Transparent,
+    errorContainerColor = Color.Transparent
+  )
 
   AlertDialog(modifier = modifier,
     title = {

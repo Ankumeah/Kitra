@@ -6,12 +6,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.ankumeah.github.kitra.apiCalls.BackendRetrofitInstance
+import com.ankumeah.github.kitra.classes.ExchangeMessageFirstResponse
+import com.ankumeah.github.kitra.classes.ExchangeMessageResponse
 import com.ankumeah.github.kitra.classes.Kitra
 import com.ankumeah.github.kitra.models.Contact
+import com.ankumeah.github.kitra.models.Message
 import com.ankumeah.github.kitra.models.Misc
 import com.ankumeah.github.kitra.models.RefreshToken
 import com.ankumeah.github.kitra.models.SessionToken
 import com.ankumeah.github.kitra.models.User
+import com.ankumeah.github.kitra.webSockets.BackendWebSocketManager
+import com.google.gson.Gson
 import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.CoroutineScope
@@ -24,20 +29,16 @@ import kotlinx.coroutines.withContext
 
 class DataBaseViewModel: ViewModel() {
   private val realm = Kitra.realm
+  private val gson = Gson()
 
-  val contacts = realm.query<Contact>().asFlow()
-    .map { it.list.toList() }
+  val contacts = realm.query<Contact>().asFlow().map { it.list.toList() }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
   val user = realm.query<User>().first().asFlow().map { it.obj }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), User())
-
   val misc = realm.query<Misc>().first().asFlow().map { it.obj }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), Misc())
-
   val refreshToken = realm.query<RefreshToken>().first().asFlow().map { it.obj }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), RefreshToken())
-
   val sessionToken = realm.query<SessionToken>().first().asFlow().map { it.obj }
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SessionToken())
 
@@ -56,11 +57,10 @@ class DataBaseViewModel: ViewModel() {
     }
   }
 
-  fun logIn(user: String, mail: String, refreshToken: String, refreshTokenExpiry: Long, sessionToken: String, sessionTokenExpiry: Long) {
+  fun logIn(mail: String, refreshToken: String, refreshTokenExpiry: Long, sessionToken: String, sessionTokenExpiry: Long) {
     viewModelScope.launch {
       realm.write {
         val user = User().apply {
-          username = user
           email = mail
         }
         val refreshToken = RefreshToken().apply {
@@ -77,13 +77,20 @@ class DataBaseViewModel: ViewModel() {
         copyToRealm(sessionToken, updatePolicy = UpdatePolicy.ALL)
       }
     }
+
+//    CoroutineScope(Dispatchers.IO).launch {
+//      sendFirstWebsocketResponse(mail, sessionToken)
+//    }
   }
 
   fun logOut(navController: NavController) {
     viewModelScope.launch {
       realm.write {
-        delete(query<User>())
         delete(query<Contact>())
+        delete(query<Message>())
+        delete(query<User>())
+        delete(query<RefreshToken>())
+        delete(query<SessionToken>())
       }
     }
     CoroutineScope(Dispatchers.IO).launch {
@@ -105,12 +112,14 @@ class DataBaseViewModel: ViewModel() {
             }
           }
 
+          BackendWebSocketManager.webSocket.close(1000, null)
+
           navController.navigate(("SignInPage")) { popUpTo(evaluatedRoute ?: "SettingScreen") { inclusive = true } }
         }
       }
       catch (e: Exception) {
         withContext(Dispatchers.Main) {
-          Log.e("DataBaseViewModel", "An error occurred: $e")
+          Log.e("DataBaseViewModel", "An error occurred while logging out: $e")
         }
       }
     }
@@ -133,6 +142,8 @@ class DataBaseViewModel: ViewModel() {
                 value = res.body()!!.session_token
                 expiry = res.body()!!.session_token_expire
               }
+
+              copyToRealm(sessionToken, updatePolicy = UpdatePolicy.ALL)
             }
           }
         } else {
@@ -156,10 +167,10 @@ class DataBaseViewModel: ViewModel() {
   suspend fun isValidUser(email: String): Int {
     return withContext(Dispatchers.IO) {
       try {
-        val res = BackendRetrofitInstance.isValidUserApi.isValidUser(mapOf("email" to email))
+        val res = BackendRetrofitInstance.isUserValidApi.isUserValid(email)
 
         if (res.isSuccessful) {
-          if (res.body()?.message == "true") { return@withContext 0 }
+          if (res.body()?.message == true) { return@withContext 0 }
           else { return@withContext 1 }
         }
         else {
@@ -204,5 +215,33 @@ class DataBaseViewModel: ViewModel() {
 
   fun findContact(contactName: String): Contact? {
     return realm.query<Contact>("contactName == $0", contactName).first().find()
+  }
+
+  suspend fun sendFirstWebsocketResponse(email: String, sessionToken: String) {
+    Log.i("DataBaseViewModel", "Sending first websocket response")
+
+    val data = ExchangeMessageFirstResponse(
+      email = email,
+      session_token = sessionToken
+    )
+
+    withContext(Dispatchers.IO) {
+      try { BackendWebSocketManager.webSocket.send(gson.toJson(data)) }
+      catch (e: Exception) { Log.e("DataBaseViewModel", "An error occurred: $e") }
+    }
+  }
+
+  suspend fun sendMessage(contact: Contact, content: String): Boolean {
+    Log.d("DataBaseViewModel", "Sending message to ${contact.contactAddress}")
+    val data = ExchangeMessageResponse(
+      content = content,
+      receiver_email = contact.contactAddress,
+      session_token = sessionToken.value?.value.toString()
+    )
+
+    return withContext(Dispatchers.IO) {
+      val res = BackendWebSocketManager.webSocket.send(gson.toJson(data))
+      return@withContext res
+    }
   }
 }

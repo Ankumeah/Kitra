@@ -15,15 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.ankumeah.github.kitra.auth.GoogleSignInScreen
+import com.ankumeah.github.kitra.classes.ExchangeMessagesRequest
 import com.ankumeah.github.kitra.screens.ChatScreen
 import com.ankumeah.github.kitra.screens.MainScreen
 import com.ankumeah.github.kitra.screens.SettingsScreen
@@ -31,7 +32,10 @@ import com.ankumeah.github.kitra.screens.SignInPage
 import com.ankumeah.github.kitra.ui.theme.KitraTheme
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
 import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
+import com.ankumeah.github.kitra.webSockets.BackendWebSocketManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
   val dataBaseViewModel: DataBaseViewModel by viewModels()
@@ -48,14 +52,16 @@ class MainActivity : ComponentActivity() {
           val colors = remember(misc.value?.isDarkTheme) {
             ColorsViewModel(misc.value?.isDarkTheme != false)
           }
+          val incomingMessages = BackendWebSocketManager.messages.collectAsStateWithLifecycle(null)
 
-          val startScreen = if (user.value?.username != null) "MainScreen" else "SignInPage"
+          val startScreen = if (user.value?.email != null) "MainScreen" else "SignInPage"
 
           App(
             startScreen = startScreen,
             dataBaseViewModel = dataBaseViewModel,
             colors = colors,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            incomingMessages = incomingMessages
           )
         }
       }
@@ -64,18 +70,31 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun App(modifier: Modifier = Modifier, startScreen: String, dataBaseViewModel: DataBaseViewModel, colors: ColorsViewModel) {
+fun App(
+  modifier: Modifier = Modifier,
+  startScreen: String,
+  dataBaseViewModel: DataBaseViewModel,
+  colors: ColorsViewModel,
+  incomingMessages: State<ExchangeMessagesRequest?>
+) {
+
   val navController = rememberNavController()
 
   NavHost(navController = navController, startDestination = startScreen) {
     composable("MainScreen") { MainScreen(modifier = modifier.fillMaxSize(), navController = navController, colors = colors, dataBaseViewModel = dataBaseViewModel) }
     composable("SettingsScreen") { SettingsScreen(modifier = modifier.fillMaxSize(), navController = navController, dataBaseViewModel = dataBaseViewModel, colors = colors) }
     composable("SignInPage") { SignInPage(modifier = modifier.fillMaxSize(), navController = navController, colors = colors) }
-    composable("auth/GoogleSignIn") { GoogleSignInScreen(modifier = modifier.fillMaxSize(), navController = navController, colors = colors) }
+    composable("auth/GoogleSignIn") { GoogleSignInScreen(modifier = modifier.fillMaxSize(), navController = navController, colors = colors, dataBaseViewModel = dataBaseViewModel) }
     composable("chats/{contact}") { backStackEntry ->
       val contact = dataBaseViewModel.findContact(backStackEntry.arguments?.getString("contact").toString())
       if (contact != null) {
-        ChatScreen(modifier = modifier.fillMaxSize(), navController = navController, colors = colors, contact = contact)
+        ChatScreen(
+          modifier = modifier.fillMaxSize(),
+          navController = navController,
+          colors = colors,
+          contact = contact,
+          dataBaseViewModel = dataBaseViewModel
+        )
       }
     }
   }
@@ -84,9 +103,9 @@ fun App(modifier: Modifier = Modifier, startScreen: String, dataBaseViewModel: D
     val sessionToken = dataBaseViewModel.sessionToken.collectAsStateWithLifecycle()
     val context: Context = LocalContext.current
 
-  LaunchedEffect("TokenChecker") {
+  LaunchedEffect(Unit) {
     while (true) {
-      Log.i("App", "Starting TokenChecker")
+      Log.i("App::TokenChecker", "Starting TokenChecker")
       val lastCheck: Long = System.currentTimeMillis() / 1000
 
       if (refreshToken.value != null && refreshToken.value?.value != "" && refreshToken.value!!.expiry <= lastCheck) {
@@ -101,19 +120,21 @@ fun App(modifier: Modifier = Modifier, startScreen: String, dataBaseViewModel: D
         while (tryCount <= 3) {
           val res: Int = dataBaseViewModel.renewSessionToken()
           if (res == 0) {
-            Log.i("App", "Session token renewed")
+            Log.i("App::TokenChecker", "Session token renewed")
             break
-          } else if (res == 401) {
-            Log.i("App", "Session token expired")
+          }
+          else if (res == 401) {
+            Log.i("App::TokenChecker", "Session token expired")
 
             dataBaseViewModel.logOut(navController = navController)
             break
-          } else {
+          }
+          else {
             tryCount++
-            if (tryCount < maxTries) {
-              Log.i("App", "Session token renewal attempt $tryCount failed, trying again")
+            if (tryCount <= maxTries) {
+              Log.i("App::TokenChecker", "Session token renewal attempt $tryCount failed, trying again")
             } else {
-              Log.e("App", "Session token renewal failed, max tries reached")
+              Log.e("App::TokenChecker", "Session token renewal failed, max tries reached")
             }
           }
         }
@@ -122,13 +143,20 @@ fun App(modifier: Modifier = Modifier, startScreen: String, dataBaseViewModel: D
       delay(1000 * 5 * 60)
     }
   }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun AppPreview() {
-  KitraTheme {
-    val colorsViewModel = ColorsViewModel()
-    App(modifier = Modifier.fillMaxSize(), startScreen = "MainScreen", dataBaseViewModel = DataBaseViewModel(), colors = colorsViewModel)
+  LaunchedEffect(Unit) {
+    combine(dataBaseViewModel.user, dataBaseViewModel.sessionToken) {
+      user, sessionToken -> user to sessionToken
+    }
+      .first { (user, token) ->
+        user?.email?.isNotBlank() == true
+        && token?.value?.isNotBlank() == true
+      }
+      .let { (user, token) ->
+        dataBaseViewModel.sendFirstWebsocketResponse(
+          email = user!!.email.toString(),
+          sessionToken = token!!.value
+        )
+      }
   }
 }

@@ -1,13 +1,11 @@
 package com.ankumeah.github.kitra.screens
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,18 +14,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.ankumeah.github.kitra.composables.MessageBubble
+import com.ankumeah.github.kitra.composables.SendMessageInputBox
 import com.ankumeah.github.kitra.models.Contact
-import com.ankumeah.github.kitra.ui.theme.KitraTheme
 import com.ankumeah.github.kitra.viewModels.ColorsViewModel
-import com.ankumeah.github.kitra.viewModels.SampleDataViewModel
+import com.ankumeah.github.kitra.viewModels.DataBaseViewModel
 
 @Composable
-fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, contact: Contact, colors: ColorsViewModel) {
+fun ChatScreen(
+  modifier: Modifier = Modifier,
+  navController: NavController,
+  contact: Contact,
+  colors: ColorsViewModel,
+  dataBaseViewModel: DataBaseViewModel
+) {
   Column(modifier = modifier.background(colors.primary())) {
     Row(
       modifier = Modifier
@@ -73,16 +76,16 @@ fun ChatScreen(modifier: Modifier = Modifier, navController: NavController, cont
         .clip(RoundedCornerShape(15.dp))
         .background(colors.primary())
     ) {
-
+      Column(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.9f)) {
+        for (message in contact.messages) {
+          MessageBubble(
+            modifier = Modifier,
+            message = message,
+            colors = colors
+          )
+        }
+      }
+      SendMessageInputBox(modifier = Modifier.weight(0.1f), colors, dataBaseViewModel, contact = contact)
     }
-  }
-}
-
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
-@Composable
-fun ChatScreenPreview() {
-  KitraTheme {
-    ChatScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), contact = SampleDataViewModel().contactList[1], colors = ColorsViewModel())
   }
 }

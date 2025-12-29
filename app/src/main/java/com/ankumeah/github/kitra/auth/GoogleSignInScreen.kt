@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifier, colors: ColorsViewModel) {
+fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifier, colors: ColorsViewModel, dataBaseViewModel: DataBaseViewModel) {
   val webClientId = BuildConfig.webClientId
   val dataBaseViewModel: DataBaseViewModel = viewModel()
   val context: Context = LocalContext.current
@@ -66,10 +66,9 @@ fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifi
     val mapType = object : TypeToken<Map<String, String>>() {}.type
 
     val info: Map<String, String> = Gson().fromJson(body, mapType)
-    val username = (info["given_name"] ?: "") + " " + (info["family_name"] ?: "")
     val email = info["email"] ?: ""
 
-    if (username == " " || email == "") {
+    if (email == "") {
       Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show()
       navController.navigate("SignInPage") { popUpTo("auth/GoogleSignIn") { inclusive = true } }
     }
@@ -80,9 +79,8 @@ fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifi
 
           withContext(Dispatchers.Main) {
             if (res.isSuccessful) {
-              Toast.makeText(context, "Logged in as $username", Toast.LENGTH_SHORT).show()
+              Toast.makeText(context, "Logged in as $email", Toast.LENGTH_SHORT).show()
               dataBaseViewModel.logIn(
-                user = username,
                 mail = email,
                 refreshToken = res.body()!!.refresh_token,
                 refreshTokenExpiry = res.body()!!.refresh_token_expire,
@@ -92,9 +90,8 @@ fun GoogleSignInScreen(navController: NavController, modifier: Modifier = Modifi
               navController.navigate(("MainScreen")) { popUpTo("auth/GoogleSignIn") { inclusive = true } }
             }
             else {
-              Toast.makeText(context, res.body()?.message.toString(), Toast.LENGTH_SHORT).show()
+              Log.e("GoogleSignInScreen", res.body().toString())
               navController.navigate("SignInPage") { popUpTo("auth/GoogleSignIn") { inclusive = true } }
-              Log.i("GoogleSignInScreen", "res = ${res.code()}, ${res.message()}")
             }
           }
         }

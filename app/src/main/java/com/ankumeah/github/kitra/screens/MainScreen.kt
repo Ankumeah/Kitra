@@ -33,7 +33,12 @@ fun MainScreen(
 ) {
   Column(modifier = modifier.background(colors.secondary())) {
     val contacts = dataBaseViewModel.contacts.collectAsStateWithLifecycle()
-    MainScreenTitleBar(modifier = Modifier.fillMaxWidth().weight(0.1f), navController = navController, colors = colors, dataBaseViewModel = dataBaseViewModel)
+    MainScreenTitleBar(
+      modifier = Modifier.fillMaxWidth().weight(0.1f),
+      navController = navController,
+      colors = colors,
+      dataBaseViewModel = dataBaseViewModel
+    )
 
     Column(
       modifier = Modifier
@@ -77,6 +82,11 @@ fun MainScreen(
 @Composable
 fun MainScreenPreview() {
   KitraTheme {
-    MainScreen(modifier = Modifier.fillMaxSize(), navController = rememberNavController(), colors = ColorsViewModel(), dataBaseViewModel = DataBaseViewModel())
+    MainScreen(
+      modifier = Modifier.fillMaxSize(),
+      navController = rememberNavController(),
+      colors = ColorsViewModel(),
+      dataBaseViewModel = DataBaseViewModel()
+    )
   }
 }
